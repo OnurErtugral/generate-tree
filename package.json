@@ -1,0 +1,15 @@
+{
+  "name": "react-tree",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "nodemon --exec ts-node src/index.ts"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^13.13.2",
+    "ts-node": "^8.9.0",
+    "typescript": "^3.8.3"
+  }
+}
