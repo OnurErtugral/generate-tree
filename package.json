@@ -4,10 +4,14 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "start": "nodemon --exec ts-node src/index.ts"
+    "start": "nodemon --ignore \"src/component-tree/**/*.*\" --exec ts-node src/index.ts"
   },
-  "dependencies": {},
+  "dependencies": {
+    "fs-extra": "^9.0.0",
+    "glob": "^7.1.6"
+  },
   "devDependencies": {
+    "@types/fs-extra": "^8.1.0",
     "@types/node": "^13.13.2",
     "ts-node": "^8.9.0",
     "typescript": "^3.8.3"
