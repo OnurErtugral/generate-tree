@@ -1,6 +1,8 @@
 import path from "path";
-
+import open from "open";
 import fs, { Dirent } from "fs-extra";
+
+import { htmlTemplate, script } from "./template/constants";
 import test from "./example/footer/footer";
 import test1 from "./example/header/header";
 
@@ -93,6 +95,12 @@ async function getFiles(dir: string) {
   return Array.prototype.concat(...files);
 }
 
+async function openHTML(path: string) {
+  // Opens the image in the default image viewer and waits for the opened app to quit.
+  await open(path, { wait: true });
+  console.log("The image viewer app quit");
+}
+
 async function init(root: string) {
   const baseDir = __dirname;
   const rootFile = path.join(__dirname, root);
@@ -115,7 +123,15 @@ async function init(root: string) {
 
   // fs.mkdirSync(dumpFilePath);
 
-  fs.writeFileSync(path.join(dumpFilePath, "data.json"), matchesStr);
+  // Write files
+  fs.writeFileSync(
+    path.join(dumpFilePath, "data.js"),
+    "var data = " + matchesStr
+  );
+  fs.writeFileSync(path.join(dumpFilePath, "script.js"), script);
+  fs.writeFileSync(path.join(dumpFilePath, "index.html"), htmlTemplate);
+
+  openHTML(path.join(dumpFilePath, "index.html"));
 }
 
 init("./index.ts");

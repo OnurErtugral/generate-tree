@@ -1,6 +1,10 @@
-{
+var data = {
   "path": "index.ts",
   "children": [
+    {
+      "path": "constants.js",
+      "children": null
+    },
     {
       "path": "footer.ts",
       "children": [
