@@ -17,8 +17,9 @@ const htmlTemplate = `<!DOCTYPE html>
 `;
 
 const script = `
-var width = window.innerWidth - 50;
-var height = window.innerHeight - 50;
+var margin = { top: 10, right: 30, bottom: 30, left: 70 };
+var width = window.innerWidth - margin.left - margin.right;
+var height = window.innerHeight - margin.top - margin.bottom;
 
 var svg = d3
   .select("#canvas")
@@ -26,12 +27,16 @@ var svg = d3
   .attr("width", width)
   .attr("height", height)
   .append("g")
-  .attr("transform", "translate(40,0)");
+  .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-var cluster = d3.tree().size([height, width - 100]);
+var cluster = d3.tree().size([height, width - 200]);
 var root = d3.hierarchy(data, d => d.children);
 cluster(root);
-var link = svg
+var drawArea = svg.append("g").classed("drawArea", true);
+
+var link = drawArea
+  .append("g")
+  .classed("paths", true)
   .selectAll(".link")
   .data(root.descendants().slice(1))
   .enter()
@@ -58,7 +63,9 @@ var link = svg
     );
   });
 
-var node = svg
+var node = drawArea
+  .append("g")
+  .classed("nodes", true)
   .selectAll(".node")
   .data(root.descendants())
   .enter()
@@ -70,11 +77,11 @@ var node = svg
     return "translate(" + d.y + "," + d.x + ")";
   });
 
-node.append("circle").attr("r", 2.5);
+node.append("circle").attr("r", 3);
 
 node
   .append("text")
-  .attr("dy", 3)
+  .attr("dy", 4)
   .attr("x", function(d) {
     return d.children ? -8 : 8;
   })
@@ -84,6 +91,27 @@ node
   .text(function(d) {
     return d.data.path;
   });
+
+var zoom = d3
+  .zoom()
+  .scaleExtent([1, 4])
+  .translateExtent([[0, 0], [width, height]])
+  .extent([[0, 0], [width, height]])
+  .on("zoom", updateChart);
+
+//  add an invisible rect
+d3.select("svg")
+  .append("rect")
+  .attr("width", width)
+  .attr("height", height)
+  .style("fill", "none")
+  .style("pointer-events", "all")
+  .call(zoom);
+
+function updateChart() {
+  drawArea.attr("transform", d3.event.transform);
+}
+
 
 `;
 
