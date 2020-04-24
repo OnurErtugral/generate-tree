@@ -8,6 +8,7 @@ import argv from "minimist";
 import { htmlTemplate, script, style } from "./template/constants";
 import test from "./example/footer/footer";
 import test1 from "./example/header/header";
+import bar from "./example";
 
 function getFileName(match: string) {
   match = match.replace("'", '"');
@@ -33,9 +34,23 @@ async function returnChildren(rootFile: string) {
       //   console.log("for: ", index);
 
       const element = matches[index];
+      // console.log("element: ", element);
       const dirName = path.dirname(rootFile);
-      const normalized = path.resolve(dirName, getFileName(element));
+      // console.log("dirName: ", dirName);
+      let normalized = path.resolve(dirName, getFileName(element));
+      // console.log("normalized: ", normalized);
+
+      try {
+        const isDir = fs.lstatSync(normalized).isDirectory();
+        console.log("isDir: ", isDir);
+        if (isDir) {
+          normalized = path.join(normalized, "/index");
+        }
+      } catch (err) {}
+
       const baseName = path.basename(normalized);
+      // console.log("baseName: ", baseName);
+
       const extension = map[path.dirname(normalized)].filter(
         (file: any) => file.name === baseName
       )[0].extention;
