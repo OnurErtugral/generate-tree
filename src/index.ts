@@ -1,8 +1,11 @@
+#!/usr/bin/env node
+
 import path from "path";
 import open from "open";
 import fs, { Dirent } from "fs-extra";
+import argv from "minimist";
 
-import { htmlTemplate, script } from "./template/constants";
+import { htmlTemplate, script, style } from "./template/constants";
 import test from "./example/footer/footer";
 import test1 from "./example/header/header";
 
@@ -59,6 +62,8 @@ function createFileExtentionMap(files: Array<string>) {
     const name = fileNameRaw.slice(0, fileNameRaw.lastIndexOf("."));
     const extention = path.extname(fileNameRaw);
 
+    if (![".js", ".jsx", ".ts", ".tsx"].includes(extention)) return;
+
     map[path.dirname(file)] = map[path.dirname(file)]
       ? [...map[path.dirname(file)], { name, extention }]
       : [{ name, extention }];
@@ -78,8 +83,7 @@ const deleteFolderRecursive = function(dirPath: string) {
         fs.unlinkSync(curPath);
       }
     });
-
-    // fs.rmdirSync(dirPath);
+    if (process.env.NODE_ENV !== "dev") fs.rmdirSync(dirPath);
   }
 };
 
@@ -98,30 +102,28 @@ async function getFiles(dir: string) {
 async function openHTML(path: string) {
   // Opens the image in the default image viewer and waits for the opened app to quit.
   await open(path, { wait: true });
-  console.log("The image viewer app quit");
+  // console.log("The image viewer app quit");
 }
 
 async function init(root: string) {
-  const baseDir = __dirname;
-  const rootFile = path.join(__dirname, root);
+  const baseDir = process.cwd();
+  const rootFile = path.join(baseDir, root);
 
   const files: string[] = await getFiles(baseDir);
   //   console.log(files);
   createFileExtentionMap(files);
-  //   console.log(JSON.stringify(map, null, 2));
+  // console.log(JSON.stringify(map, null, 2));
 
   const matches = await returnChildren(rootFile);
-
   const matchesStr = JSON.stringify(matches, null, 2);
-  console.log(matchesStr);
+  // console.log(matchesStr);
 
-  const dumpFilePath = path.normalize(__dirname + "/component-tree");
-  console.log(dumpFilePath);
+  const dumpFilePath = path.join(baseDir, "./component-tree");
+  // console.log(dumpFilePath);
   if (fs.existsSync(dumpFilePath)) {
     deleteFolderRecursive(dumpFilePath);
   }
-
-  // fs.mkdirSync(dumpFilePath);
+  if (process.env.NODE_ENV !== "dev") fs.mkdirSync(dumpFilePath);
 
   // Write files
   fs.writeFileSync(
@@ -129,9 +131,19 @@ async function init(root: string) {
     "var data = " + matchesStr
   );
   fs.writeFileSync(path.join(dumpFilePath, "script.js"), script);
+  fs.writeFileSync(path.join(dumpFilePath, "style.css"), style);
   fs.writeFileSync(path.join(dumpFilePath, "index.html"), htmlTemplate);
 
-  openHTML(path.join(dumpFilePath, "index.html"));
+  if (process.env.NODE_ENV !== "dev")
+    openHTML(path.join(dumpFilePath, "index.html"));
 }
 
-init("./index.ts");
+if (process.env.NODE_ENV !== "dev") {
+  const args = argv(process.argv.slice(2));
+  if (!args["entryFile"]) {
+    throw new Error("--entryFile flag is required.");
+  }
+  init(args["entryFile"]);
+} else {
+  init("./src/index.ts");
+}

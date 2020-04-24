@@ -1,1 +1,5 @@
 node_modules
+*.log
+tsconfig.tsbuildinfo
+dist
+component-tree
