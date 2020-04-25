@@ -96,16 +96,16 @@ var node = drawArea
     root.path(d).forEach((link) => {
       d3.select("#link-" + link.id)
         .style("stroke", "red")
-        .style("stroke-width", "3");
+        .style("stroke-width", "4");
       d3.select("#circle-" + link.id).style("fill", "red");
     });
   })
   .on("mouseleave", function(d) {
     root.path(d).forEach((link) => {
       d3.select("#link-" + link.id)
-        .style("stroke", "#555")
-        .style("stroke-width", "1.5");
-      d3.select("#circle-" + link.id).style("fill", "#555");
+        .style("stroke", "rgb(0, 174, 255)")
+        .style("stroke-width", "2");
+      d3.select("#circle-" + link.id).style("fill", "#777");
     });
   });
 
@@ -144,34 +144,42 @@ function updateChart() {
 }
 `;
 
-const style = `body {
+const style = `
+body {
   font-family: sans-serif;
+  background-color: #242626;
 }
 .node circle {
-  fill: #999;
+  fill: #777;
   transition: all 0.3s;
   cursor: pointer;
-  z-index: 9;
 }
+
 .node text {
   font: 11px sans-serif;
   user-select: none;
   cursor: pointer;
-  z-index: 9;
+  font-weight: 300;
+  fill: #c0c0c0;
 }
+
 .node--internal circle {
-  fill: #555;
+  fill: #777;
 }
+
 .node--internal text {
-  text-shadow: 0 1px 0 #fff, 0 -1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff;
+  text-shadow: 0 1px 0 #242626, 0 -1px 0 #242626, 1px 0 0 #242626,
+    -1px 0 0 #242626;
 }
+
 .link {
   fill: none;
-  stroke: #555;
+  stroke: #00cdff;
   stroke-opacity: 0.4;
-  stroke-width: 1.5px;
+  stroke-width: 2px;
   transition: all 0.3s;
 }
+
 `;
 
 module.exports = { htmlTemplate, script, style };
