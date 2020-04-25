@@ -1,25 +1,24 @@
 #!/usr/bin/env node
 
 import path from "path";
-import open from "open";
-import fs, { Dirent } from "fs-extra";
+import fs from "fs-extra";
 import argv from "minimist";
 
-import { htmlTemplate, script, style } from "./template/constants";
+import openHTMLInBrowser from "./utils/openHTMLInBrowser";
+import getFiles from "./utils/getAllFiles";
+import mapFileNameToExtention from "./utils/mapFileNameToExtention";
+import createOutputDir from "./utils/createOutputDir";
 import test from "./example/footer/footer";
 import test1 from "./example/header/header";
 import bar from "./example";
+import getExtention from "./utils/getExtension";
+import getFilePathFromMatch from "./utils/getFilePathFromMatch";
+import isDir from "./utils/isDir";
 
-function getFileName(match: string) {
-  match = match.replace("'", '"');
-  const start = match.indexOf(".");
-  const end = match.lastIndexOf('"');
-  return match.slice(start, end);
-}
+let map: { [key: string]: any } = {};
 
 async function returnChildren(rootFile: string) {
   const content = await fs.readFile(rootFile, { encoding: "utf8" });
-
   //   console.log("rootFile: ", rootFile);
 
   let matches: RegExpMatchArray | null = content.match(
@@ -28,38 +27,39 @@ async function returnChildren(rootFile: string) {
   let children: any = [];
 
   if (matches) {
-    // console.log("matches");
-
     for (let index = 0; index < matches.length; index++) {
-      //   console.log("for: ", index);
+      const match = matches[index];
+      // console.log("match: ", match);
 
-      const element = matches[index];
-      // console.log("element: ", element);
       const dirName = path.dirname(rootFile);
       // console.log("dirName: ", dirName);
-      let normalized = path.resolve(dirName, getFileName(element));
+
+      let normalized = path.resolve(dirName, getFilePathFromMatch(match));
       // console.log("normalized: ", normalized);
 
-      try {
-        const isDir = fs.lstatSync(normalized).isDirectory();
-        console.log("isDir: ", isDir);
-        if (isDir) {
-          normalized = path.join(normalized, "/index");
-        }
-      } catch (err) {}
+      const isDirFlag = isDir(normalized);
+      // console.log("isDir: ", isDirFlag);
 
-      const baseName = path.basename(normalized);
+      let baseName = path.basename(normalized);
       // console.log("baseName: ", baseName);
 
-      const extension = map[path.dirname(normalized)].filter(
-        (file: any) => file.name === baseName
-      )[0].extention;
+      let extension;
+      try {
+        extension = getExtention(normalized, baseName, map);
+      } catch (err) {
+        if (isDirFlag) {
+          baseName = "index";
+          normalized = path.join(normalized, baseName);
+          extension = getExtention(normalized, baseName, map);
+        } else {
+          throw new Error(err);
+        }
+      }
 
       const pathName = normalized + extension;
-      console.log(path.dirname(rootFile));
-      const a = await returnChildren(pathName);
+      console.log(pathName);
 
-      children.push(a);
+      children.push(await returnChildren(pathName));
     }
   }
 
@@ -69,88 +69,23 @@ async function returnChildren(rootFile: string) {
   };
 }
 
-let map: { [key: string]: any } = {};
-function createFileExtentionMap(files: Array<string>) {
-  files.forEach((file) => {
-    const fileNameRaw = path.basename(file);
-
-    const name = fileNameRaw.slice(0, fileNameRaw.lastIndexOf("."));
-    const extention = path.extname(fileNameRaw);
-
-    if (![".js", ".jsx", ".ts", ".tsx"].includes(extention)) return;
-
-    map[path.dirname(file)] = map[path.dirname(file)]
-      ? [...map[path.dirname(file)], { name, extention }]
-      : [{ name, extention }];
-  });
-
-  return map;
-}
-
-// https://stackoverflow.com/questions/18052762/remove-directory-which-is-not-empty/32197381
-const deleteFolderRecursive = function(dirPath: string) {
-  if (fs.existsSync(dirPath)) {
-    fs.readdirSync(dirPath).forEach((file, index) => {
-      const curPath = path.join(dirPath, file);
-      if (fs.lstatSync(curPath).isDirectory()) {
-        deleteFolderRecursive(curPath);
-      } else {
-        fs.unlinkSync(curPath);
-      }
-    });
-    if (process.env.NODE_ENV !== "dev") fs.rmdirSync(dirPath);
-  }
-};
-
-async function getFiles(dir: string) {
-  // @ts-ignore
-  const dirents = await fs.readdir(dir, { withFileTypes: true });
-  const files = await Promise.all(
-    dirents.map((dirent: Dirent) => {
-      const res = path.resolve(dir, dirent.name);
-      return dirent.isDirectory() ? getFiles(res) : res;
-    })
-  );
-  return Array.prototype.concat(...files);
-}
-
-async function openHTML(path: string) {
-  // Opens the image in the default image viewer and waits for the opened app to quit.
-  await open(path, { wait: true });
-  // console.log("The image viewer app quit");
-}
-
 async function init(root: string) {
   const baseDir = process.cwd();
   const rootFile = path.join(baseDir, root);
 
   const files: string[] = await getFiles(baseDir);
   //   console.log(files);
-  createFileExtentionMap(files);
+  map = mapFileNameToExtention(files);
   // console.log(JSON.stringify(map, null, 2));
 
-  const matches = await returnChildren(rootFile);
-  const matchesStr = JSON.stringify(matches, null, 2);
-  // console.log(matchesStr);
+  const outputJSON = await returnChildren(rootFile);
+  const outputStr = JSON.stringify(outputJSON, null, 2);
+  // console.log(outputStr);
 
-  const dumpFilePath = path.join(baseDir, "./component-tree");
-  // console.log(dumpFilePath);
-  if (fs.existsSync(dumpFilePath)) {
-    deleteFolderRecursive(dumpFilePath);
-  }
-  if (process.env.NODE_ENV !== "dev") fs.mkdirSync(dumpFilePath);
-
-  // Write files
-  fs.writeFileSync(
-    path.join(dumpFilePath, "data.js"),
-    "var data = " + matchesStr
-  );
-  fs.writeFileSync(path.join(dumpFilePath, "script.js"), script);
-  fs.writeFileSync(path.join(dumpFilePath, "style.css"), style);
-  fs.writeFileSync(path.join(dumpFilePath, "index.html"), htmlTemplate);
+  const outputDirPath = createOutputDir(baseDir, outputStr);
 
   if (process.env.NODE_ENV !== "dev")
-    openHTML(path.join(dumpFilePath, "index.html"));
+    openHTMLInBrowser(path.join(outputDirPath, "index.html"));
 }
 
 if (process.env.NODE_ENV !== "dev") {
