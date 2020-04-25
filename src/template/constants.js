@@ -17,7 +17,7 @@ const htmlTemplate = `<!DOCTYPE html>
 `;
 
 const script = `
-var margin = { top: 10, right: 30, bottom: 30, left: 70 };
+var margin = { top: 10, right: 10, bottom: 10, left: 10 };
 var width = window.innerWidth - margin.left - margin.right;
 var height = window.innerHeight - margin.top - margin.bottom;
 
@@ -26,23 +26,33 @@ var svg = d3
   .append("svg")
   .attr("width", width)
   .attr("height", height)
-  .append("g")
-  .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+  .append("g");
 
-var cluster = d3.tree().size([height, width - 200]);
-var root = d3.hierarchy(data, d => d.children);
-cluster(root);
-var drawArea = svg.append("g").classed("drawArea", true);
+var tree = d3.tree().size([height, width - 200]);
+var root = d3.hierarchy(data, (d) => d.children);
+
+tree(root);
+
+var drawArea = svg
+  .append("g")
+  .classed("drawArea", true)
+  .attr("transform", "translate(" + 75 + "," + 0 + ")");
+
+var nodes = root.descendants();
+var links = root.descendants().slice(1);
+var i = 0;
 
 var link = drawArea
   .append("g")
   .classed("paths", true)
   .selectAll(".link")
-  .data(root.descendants().slice(1))
+  .data(links, function(d) {
+    return d.id || (d.id = ++i);
+  })
   .enter()
   .append("path")
   .attr("class", "link")
-  .attr("d", d => {
+  .attr("d", (d) => {
     return (
       "M" +
       d.y +
@@ -61,13 +71,18 @@ var link = drawArea
       "," +
       d.parent.x
     );
+  })
+  .attr("id", (d) => {
+    return "link-" + d.id;
   });
 
 var node = drawArea
   .append("g")
   .classed("nodes", true)
   .selectAll(".node")
-  .data(root.descendants())
+  .data(nodes, function(d) {
+    return d.id || (d.id = ++i);
+  })
   .enter()
   .append("g")
   .attr("class", function(d) {
@@ -75,9 +90,33 @@ var node = drawArea
   })
   .attr("transform", function(d) {
     return "translate(" + d.y + "," + d.x + ")";
+  })
+
+  .on("mouseenter", function(d) {
+    root.path(d).forEach((link) => {
+      d3.select("#link-" + link.id)
+        .style("stroke", "red")
+        .style("stroke-width", "3");
+      d3.select("#circle-" + link.id).style("fill", "red");
+    });
+  })
+  .on("mouseleave", function(d) {
+    root.path(d).forEach((link) => {
+      d3.select("#link-" + link.id)
+        .style("stroke", "#555")
+        .style("stroke-width", "1.5");
+      d3.select("#circle-" + link.id).style("fill", "#555");
+    });
   });
 
-node.append("circle").attr("r", 3);
+node
+  .append("circle")
+  .attr("r", 4.5)
+  .on("mouseenter", function(d) {
+  })
+  .attr("id", (d) => {
+    return "circle-" + d.id;
+  });
 
 node
   .append("text")
@@ -99,48 +138,39 @@ var zoom = d3
   .extent([[0, 0], [width, height]])
   .on("zoom", updateChart);
 
-//  add an invisible rect
-d3.select("svg")
-  .append("rect")
-  .attr("width", width)
-  .attr("height", height)
-  .style("fill", "none")
-  .style("pointer-events", "all")
-  .call(zoom);
-
+d3.select("svg").call(zoom);
 function updateChart() {
-  drawArea.attr("transform", d3.event.transform);
+  d3.select("svg g").attr("transform", d3.event.transform);
 }
-
-
 `;
 
 const style = `body {
   font-family: sans-serif;
 }
-
 .node circle {
   fill: #999;
+  transition: all 0.3s;
+  cursor: pointer;
+  z-index: 9;
 }
-
 .node text {
-  font: 12px sans-serif;
+  font: 11px sans-serif;
   user-select: none;
+  cursor: pointer;
+  z-index: 9;
 }
-
 .node--internal circle {
   fill: #555;
 }
-
 .node--internal text {
   text-shadow: 0 1px 0 #fff, 0 -1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff;
 }
-
 .link {
   fill: none;
   stroke: #555;
   stroke-opacity: 0.4;
   stroke-width: 1.5px;
+  transition: all 0.3s;
 }
 `;
 
