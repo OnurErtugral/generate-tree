@@ -16,57 +16,75 @@ import getFilePathFromMatch from "./utils/getFilePathFromMatch";
 import isDir from "./utils/isDir";
 
 let map: { [key: string]: any } = {};
+let currentStack: string[] = [];
 
 async function returnChildren(rootFile: string) {
   const content = await fs.readFile(rootFile, { encoding: "utf8" });
-  //   console.log("rootFile: ", rootFile);
+  if (!currentStack.includes(rootFile)) {
+    currentStack.push(rootFile);
+    // console.log("rootFile: ", rootFile);
 
-  let matches: RegExpMatchArray | null = content.match(
-    /(from|require)(\s|\R)*("|')\s*\.{1,2}.+("|')/gim
-  );
-  let children: any = [];
+    let matches: RegExpMatchArray | null = content.match(
+      /(from|require)(\s|\R)*("|')\s*\.{1,2}.+("|')/gim
+    );
+    let children: any = [];
 
-  if (matches) {
-    for (let index = 0; index < matches.length; index++) {
-      const match = matches[index];
-      // console.log("match: ", match);
+    if (matches) {
+      for (let index = 0; index < matches.length; index++) {
+        const match = matches[index];
+        // console.log("match: ", match);
 
-      const dirName = path.dirname(rootFile);
-      // console.log("dirName: ", dirName);
+        const dirName = path.dirname(rootFile);
+        // console.log("dirName: ", dirName);
 
-      let normalized = path.resolve(dirName, getFilePathFromMatch(match));
-      // console.log("normalized: ", normalized);
+        let normalized = path.resolve(dirName, getFilePathFromMatch(match));
+        // console.log("normalized: ", normalized);
 
-      const isDirFlag = isDir(normalized);
-      // console.log("isDir: ", isDirFlag);
+        const isDirFlag = isDir(normalized);
+        // console.log("isDir: ", isDirFlag);
 
-      let baseName = path.basename(normalized);
-      // console.log("baseName: ", baseName);
+        let baseName = path.basename(normalized);
+        // console.log("baseName: ", baseName);
 
-      let extension;
-      try {
-        extension = getExtention(normalized, baseName, map);
-      } catch (err) {
-        if (isDirFlag) {
-          baseName = "index";
-          normalized = path.join(normalized, baseName);
-          extension = getExtention(normalized, baseName, map);
-        } else {
-          throw new Error(err);
+        let lastDotIndex = baseName.lastIndexOf(".");
+
+        let extension;
+        try {
+          if (lastDotIndex > 0) {
+            extension = "";
+          } else {
+            extension = getExtention(normalized, baseName, map);
+          }
+        } catch (err) {
+          if (isDirFlag) {
+            baseName = "index";
+            normalized = path.join(normalized, baseName);
+            extension = getExtention(normalized, baseName, map);
+          } else {
+            throw new Error(err);
+          }
         }
+
+        const pathName = normalized + extension;
+        console.log(pathName);
+
+        children.push(await returnChildren(pathName));
       }
-
-      const pathName = normalized + extension;
-      console.log(pathName);
-
-      children.push(await returnChildren(pathName));
     }
-  }
 
-  return {
-    path: path.basename(rootFile),
-    children: children.length < 1 ? null : children,
-  };
+    // console.log("currentStack: ", currentStack);
+    currentStack = currentStack.slice(0, currentStack.length - 1);
+
+    return {
+      path: path.basename(rootFile),
+      children: children.length < 1 ? null : children,
+    };
+  } else {
+    return {
+      path: path.basename(rootFile),
+      children: null,
+    };
+  }
 }
 
 async function init(root: string) {
