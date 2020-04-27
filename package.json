@@ -6,8 +6,9 @@
   "preferGlobal": true,
   "license": "MIT",
   "scripts": {
+    "build": "rimraf dist && tsc",
     "start": "cross-env NODE_ENV=dev nodemon --ignore \"src/component-tree/**/*.*\" --exec ts-node src/index.ts",
-    "build": "rimraf dist && tsc"
+    "test": "jest"
   },
   "author": "Onur Ertugral",
   "dependencies": {
@@ -21,12 +22,18 @@
     "rimraf": "^3.0.2"
   },
   "devDependencies": {
+    "@babel/core": "^7.9.0",
+    "@babel/preset-env": "^7.9.5",
+    "@babel/preset-typescript": "^7.9.0",
     "@types/fs-extra": "^8.1.0",
+    "@types/jest": "^25.2.1",
     "@types/minimist": "^1.2.0",
     "@types/node": "^13.13.2",
     "@typescript-eslint/eslint-plugin": "^2.29.0",
     "@typescript-eslint/parser": "^2.29.0",
+    "babel-jest": "^25.4.0",
     "eslint": "^6.8.0",
+    "jest": "^25.4.0",
     "ts-node": "^8.9.0",
     "typescript": "^3.8.3"
   }
