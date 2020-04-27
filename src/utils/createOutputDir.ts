@@ -10,7 +10,7 @@ export default function createOutputDir(baseDir: string, data: string): string {
   if (fs.existsSync(outputDirPath)) {
     deleteFolderRecursive(outputDirPath);
   }
-  if (process.env.NODE_ENV !== "dev") fs.mkdirSync(outputDirPath);
+  if (process.env.NODE_ENV === "production") fs.mkdirSync(outputDirPath);
 
   // Write files
   fs.writeFileSync(path.join(outputDirPath, "data.js"), "var data = " + data);

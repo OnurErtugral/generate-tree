@@ -8,16 +8,18 @@
   "scripts": {
     "build": "rimraf dist && tsc",
     "start": "cross-env NODE_ENV=dev nodemon --ignore \"src/component-tree/**/*.*\" --exec ts-node src/index.ts",
-    "test": "jest"
+    "test": "jest --watchAll"
   },
   "author": "Onur Ertugral",
   "dependencies": {
+    "chalk": "^4.0.0",
     "cross-env": "^7.0.2",
     "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-prettier": "^3.1.3",
     "fs-extra": "^9.0.0",
     "minimist": "^1.2.5",
     "open": "^7.0.3",
+    "ora": "^4.0.4",
     "prettier": "^2.0.5",
     "rimraf": "^3.0.2"
   },
