@@ -23,18 +23,18 @@ async function init(root: string) {
   const files: string[] = await getFiles(baseDir);
   spinner.succeed();
 
-  spinner.text = "Extracting extensions";
+  spinner.text = "Extracting extensions...";
   spinner.start();
   const map = mapFileNameToExtention(files);
   spinner.succeed();
 
-  spinner.text = "Building component tree";
+  spinner.text = "Building component tree...";
   spinner.start();
   const outputJSON = await getChildren(rootFile, map);
   const outputStr = JSON.stringify(outputJSON, null, 2);
   spinner.succeed();
 
-  spinner.text = "Generating output output files";
+  spinner.text = "Generating output files...";
   spinner.start();
   const outputDirPath = createOutputDir(baseDir, outputStr);
   spinner.succeed();
@@ -44,7 +44,7 @@ async function init(root: string) {
   }
   console.log(
     chalk.green.bold(
-      `Visulization is ready at ${chalk.underline(
+      `Visualization is ready: ${chalk.underline(
         path.join(outputDirPath, "/index.html")
       )}`
     )
@@ -54,7 +54,8 @@ async function init(root: string) {
 if (process.env.NODE_ENV === "production") {
   const args = argv(process.argv.slice(2));
   if (!args["entryFile"]) {
-    throw new Error("--entryFile flag is required.");
+    console.error(chalk.red.bold("Error: --entryFile flag is required."));
+    process.exit(1);
   }
   init(args["entryFile"]);
 } else {

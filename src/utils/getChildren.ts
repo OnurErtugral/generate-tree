@@ -3,6 +3,7 @@ import path from "path";
 import getFilePathFromMatch from "./getFilePathFromMatch";
 import isDir from "./isDir";
 import getExtention from "./getExtension";
+import chalk from "chalk";
 
 let currentStack: string[] = [];
 
@@ -10,12 +11,22 @@ export default async function getChildren(
   rootFile: string,
   map: { [key: string]: string[] }
 ) {
-  const content = await fs.readFile(rootFile, { encoding: "utf8" });
+  let content;
+  try {
+    content = await fs.readFile(rootFile, { encoding: "utf8" });
+  } catch (err) {
+    console.log(chalk.red.bold("\nError: Could not found the file", rootFile));
+    console.log(
+      chalk.red.yellow.bold("Make sure the file has the correct extension.")
+    );
+    process.exit(1);
+  }
+
   if (!currentStack.includes(rootFile)) {
     currentStack.push(rootFile);
 
     let matches: RegExpMatchArray | null = content.match(
-      /(from|require)(\s|\R)*("|')\s*\.{1,2}.+("|')/gim
+      /import\s+[\w-]+\s+from(\s|\R)*("|')\s*\.{1,2}\/.+("|')/gim
     );
     let children: any = [];
 
@@ -35,6 +46,7 @@ export default async function getChildren(
 
         let extension;
         try {
+          // It already has extension
           if (lastDotIndex > 0) {
             extension = "";
           } else {
@@ -46,7 +58,10 @@ export default async function getChildren(
             normalized = path.join(normalized, baseName);
             extension = getExtention(normalized, baseName, map);
           } else {
-            throw new Error(err);
+            console.log(
+              chalk.red.bold("\nError: Could not found the file", normalized)
+            );
+            process.exit(1);
           }
         }
 

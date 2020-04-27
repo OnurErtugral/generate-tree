@@ -3,8 +3,8 @@ href="https://github.com/OnurErtugral/component-tree"
 class="github-corner"
 aria-label="View source on GitHub"
 ><svg
-  width="80"
-  height="80"
+  width="60"
+  height="60"
   viewBox="0 0 250 250"
   style="
     fill: #fff;
@@ -208,8 +208,8 @@ node
 
 var zoom = d3
   .zoom()
-  .scaleExtent([1, 4])
-  .translateExtent([[0, 0], [width, height]])
+  .scaleExtent([0.5, 4])
+  .translateExtent([[-width/2, -height/2], [width*1.5, height*1.5]])
   .extent([[0, 0], [width, height]])
   .on("zoom", updateChart);
 
