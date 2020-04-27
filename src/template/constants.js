@@ -38,6 +38,46 @@ var drawArea = svg
   .classed("drawArea", true)
   .attr("transform", "translate(" + 75 + "," + 0 + ")");
 
+  var defs = drawArea.append("defs");
+  var gradient = defs
+    .append("linearGradient")
+    .attr("id", "svgGradient")
+    .attr("x1", "0%")
+    .attr("x2", "100%")
+    .attr("y1", "50%")
+    .attr("y2", "50%")
+    .attr("gradientUnits", "userSpaceOnUse");
+  gradient
+    .append("stop")
+    .attr("class", "start")
+    .attr("offset", "0%")
+    .attr("stop-color", d3.interpolateInferno(0.5))
+    .attr("stop-opacity", 1);
+  gradient
+    .append("stop")
+    .attr("class", "start")
+    .attr("offset", "25%")
+    .attr("stop-color", d3.interpolateInferno(0.6))
+    .attr("stop-opacity", 1);
+  gradient
+    .append("stop")
+    .attr("class", "start")
+    .attr("offset", "50%")
+    .attr("stop-color", d3.interpolateInferno(0.7))
+    .attr("stop-opacity", 1);
+  gradient
+    .append("stop")
+    .attr("class", "start")
+    .attr("offset", "75%")
+    .attr("stop-color", d3.interpolateInferno(0.8))
+    .attr("stop-opacity", 1);
+  gradient
+    .append("stop")
+    .attr("class", "end")
+    .attr("offset", "100%")
+    .attr("stop-color", d3.interpolateInferno(1))
+    .attr("stop-opacity", 1);
+
 var nodes = root.descendants();
 var links = root.descendants().slice(1);
 var i = 0;
@@ -74,7 +114,8 @@ var link = drawArea
   })
   .attr("id", (d) => {
     return "link-" + d.id;
-  });
+  })
+  .attr("stroke", "url(#svgGradient)");
 
 var node = drawArea
   .append("g")
@@ -95,7 +136,7 @@ var node = drawArea
   .on("mouseenter", function(d) {
     root.path(d).forEach((link) => {
       d3.select("#link-" + link.id)
-        .style("stroke", "red")
+        .style("stroke", "#00cdff")
         .style("stroke-width", "4");
       d3.select("#circle-" + link.id).style("fill", "red");
     });
@@ -103,7 +144,7 @@ var node = drawArea
   .on("mouseleave", function(d) {
     root.path(d).forEach((link) => {
       d3.select("#link-" + link.id)
-        .style("stroke", "rgb(0, 174, 255)")
+        .style("stroke", "url(#svgGradient)")
         .style("stroke-width", "2");
       d3.select("#circle-" + link.id).style("fill", "#777");
     });
@@ -174,7 +215,6 @@ body {
 
 .link {
   fill: none;
-  stroke: #00cdff;
   stroke-opacity: 0.4;
   stroke-width: 2px;
   transition: all 0.3s;

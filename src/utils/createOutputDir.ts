@@ -12,7 +12,6 @@ export default function createOutputDir(baseDir: string, data: string): string {
   }
   if (process.env.NODE_ENV === "production") fs.mkdirSync(outputDirPath);
 
-  // Write files
   fs.writeFileSync(path.join(outputDirPath, "data.js"), "var data = " + data);
   fs.writeFileSync(path.join(outputDirPath, "script.js"), script);
   fs.writeFileSync(path.join(outputDirPath, "style.css"), style);
