@@ -1,5 +1,6 @@
 {
   "name": "generate-tree",
+  "description": "Create dependency tree visualization by reading import stetements in your JS/TS files.",
   "version": "1.0.0",
   "main": "dist/index.js",
   "bin": "dist/index.js",
