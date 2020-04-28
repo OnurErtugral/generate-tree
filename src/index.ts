@@ -16,6 +16,16 @@ if (process.env.NODE_ENV !== "test" && process.env.NODE_ENV !== "dev") {
 }
 
 async function init(root: string) {
+  if (typeof root !== "string") {
+    console.log(chalk.red.bold("Error: Invalid entry file!"));
+    console.log(
+      chalk.red.yellow.bold(
+        "--entryFile file should be like this: --entryFile=src/index.js"
+      )
+    );
+    process.exit(1);
+  }
+
   const baseDir = process.cwd();
   const rootFile = path.join(baseDir, root);
 

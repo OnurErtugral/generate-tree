@@ -2,7 +2,7 @@ import fs from "fs-extra";
 import path from "path";
 import getFilePathFromMatch from "./getFilePathFromMatch";
 import isDir from "./isDir";
-import getExtention from "./getExtension";
+import getExtension from "./getExtension";
 import chalk from "chalk";
 
 let currentStack: string[] = [];
@@ -40,23 +40,24 @@ export default async function getChildren(
 
         const isDirFlag = isDir(normalized);
 
+        // Assume it is a file
         let baseName = path.basename(normalized);
 
         let lastDotIndex = baseName.lastIndexOf(".");
 
         let extension;
         try {
-          // It already has extension
+          // If it already has extension
           if (lastDotIndex > 0) {
             extension = "";
           } else {
-            extension = getExtention(normalized, baseName, map);
+            extension = getExtension(normalized, baseName, map);
           }
         } catch (err) {
           if (isDirFlag) {
             baseName = "index";
             normalized = path.join(normalized, baseName);
-            extension = getExtention(normalized, baseName, map);
+            extension = getExtension(normalized, baseName, map);
           } else {
             console.log(
               chalk.red.bold("\nError: Could not found the file", normalized)
